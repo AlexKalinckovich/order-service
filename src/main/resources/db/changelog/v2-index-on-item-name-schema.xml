@@ -5,6 +5,10 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
 
-    <include file="db/changelog/v1-initial-schema.xml"/>
-    <include file="db/changelog/v2-index-on-item-name-schema.xml"/>
+    <changeSet id="add_item_name_index" author="dev">
+        <createIndex tableName="items" indexName="idx_item_name">
+            <column name="name"/>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>
