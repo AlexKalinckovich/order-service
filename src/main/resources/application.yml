@@ -2,6 +2,8 @@ server:
   port: 8082
 
 spring:
+  profiles:
+    active: dev
   application:
     name: order-service
 
@@ -23,3 +25,8 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/changelog-master.xml
     enabled: true
+  config:
+    import: classpath:error-message.properties
+user:
+  service:
+    url: "https://localhost:8080"

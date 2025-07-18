@@ -37,8 +37,8 @@ public class ItemService implements IItemService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<ItemResponseDto> getAllItemsByIds(final List<Long> orderIds) {
-        final List<Item> existingItems = itemValidator.checkItemsToExistence(orderIds);
+    public List<ItemResponseDto> getAllItemsByIds(final List<Long> itemIds) {
+        final List<Item> existingItems = itemValidator.getExistsItems(itemIds);
         return itemMapper.toResponseDtoList(existingItems);
     }
 
