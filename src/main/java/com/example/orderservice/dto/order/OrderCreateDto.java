@@ -25,7 +25,6 @@ public class OrderCreateDto {
     @NotNull
     private OrderStatus status;
 
-    @NotNull
     @Past
     private LocalDateTime orderDate;
 

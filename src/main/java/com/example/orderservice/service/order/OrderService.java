@@ -10,8 +10,10 @@ import com.example.orderservice.exception.order.OrderNotFoundException;
 import com.example.orderservice.exception.orderItem.OrderItemNotFoundException;
 import com.example.orderservice.mapper.order.IOrderMapper;
 import com.example.orderservice.mapper.orderItem.IOrderItemMapper;
+import com.example.orderservice.model.Item;
 import com.example.orderservice.model.Order;
 import com.example.orderservice.model.OrderItem;
+import com.example.orderservice.repository.item.IItemRepository;
 import com.example.orderservice.repository.order.IOrderRepository;
 import com.example.orderservice.validators.order.OrderValidator;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,8 @@ import java.util.stream.Collectors;
 public class OrderService implements IOrderService {
 
     private final IOrderRepository orderRepository;
+    private final IItemRepository itemRepository;
+
 
     private final IOrderMapper orderMapper;
     private final IOrderItemMapper orderItemMapper;
@@ -45,10 +49,12 @@ public class OrderService implements IOrderService {
 
         final List<OrderItem> orderItems = orderItemMapper.toEntityList(orderCreateDto.getOrderItems());
         for (final OrderItem orderItem : orderItems) {
+            final Item item = itemRepository.getReferenceById(orderItem.getItem().getId());
             orderItem.setOrder(createOrder);
+            orderItem.setItem(item);
         }
 
-        createOrder.setOrderItems(orderItems);
+        createOrder.getOrderItems().addAll(orderItems);
 
         final Order order = orderRepository.save(createOrder);
         return orderMapper.toResponseDto(order);
@@ -89,6 +95,7 @@ public class OrderService implements IOrderService {
             }
         }
 
+        orderRepository.saveAndFlush(order);
         return orderMapper.toResponseDto(order);
     }
 
@@ -109,7 +116,9 @@ public class OrderService implements IOrderService {
     private void appendOrderItems(final Order order, final List<OrderItemCreateDto> createDtos) {
         final List<OrderItem> newItems = orderItemMapper.toEntityList(createDtos);
         newItems.forEach(item -> {
+            final Item originalItem = itemRepository.getReferenceById(item.getItem().getId());
             item.setOrder(order);
+            item.setItem(originalItem);
             order.getOrderItems().add(item);
         });
     }

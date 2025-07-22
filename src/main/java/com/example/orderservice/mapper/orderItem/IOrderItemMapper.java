@@ -1,15 +1,18 @@
 package com.example.orderservice.mapper.orderItem;
 
+import com.example.orderservice.dto.item.ItemResponseDto;
 import com.example.orderservice.dto.orderItem.OrderItemCreateDto;
 import com.example.orderservice.dto.orderItem.OrderItemResponseDto;
 import com.example.orderservice.dto.orderItem.OrderItemUpdateDto;
 import com.example.orderservice.mapper.item.IItemMapper;
+import com.example.orderservice.model.Item;
 import com.example.orderservice.model.OrderItem;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Mappings;
+import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
@@ -17,8 +20,11 @@ import java.util.List;
 @Mapper(componentModel = "spring", uses = IItemMapper.class)
 public interface IOrderItemMapper {
 
-    @Mapping(source = "item", target = "itemDto")
+    @Mapping(source = "item", target = "itemDto", qualifiedByName = "mapItem")
     OrderItemResponseDto toResponseDto(OrderItem orderItem);
+
+    @Named("mapItem")
+    ItemResponseDto toItemResponseDto(Item orderItem);
 
     @Mappings({
             @Mapping(target = "id", ignore = true),

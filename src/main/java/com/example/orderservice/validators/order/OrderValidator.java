@@ -1,5 +1,6 @@
 package com.example.orderservice.validators.order;
 
+import com.example.orderservice.client.UserServiceClient;
 import com.example.orderservice.dto.order.ItemAddedType;
 import com.example.orderservice.dto.order.OrderCreateDto;
 import com.example.orderservice.dto.order.OrderUpdateDto;
@@ -7,10 +8,8 @@ import com.example.orderservice.dto.orderItem.OrderItemCommon;
 import com.example.orderservice.dto.orderItem.OrderItemCreateDto;
 import com.example.orderservice.exception.item.ItemNotFoundException;
 import com.example.orderservice.exception.order.OrderNotFoundException;
-import com.example.orderservice.model.Item;
 import com.example.orderservice.model.Order;
 import com.example.orderservice.repository.order.IOrderRepository;
-import com.example.orderservice.validators.BaseValidator;
 import com.example.orderservice.validators.IValidator;
 import com.example.orderservice.validators.Item.ItemValidator;
 import jakarta.validation.ValidationException;
@@ -25,10 +24,12 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class OrderValidator extends BaseValidator implements IValidator<OrderCreateDto, OrderUpdateDto> {
+public class OrderValidator implements IValidator<OrderCreateDto, OrderUpdateDto> {
 
     private final ItemValidator itemValidator;
     private final IOrderRepository orderRepository;
+
+    private final UserServiceClient client;
 
     @Override
     public void validateCreateDto(final OrderCreateDto createDto) {
@@ -40,7 +41,8 @@ public class OrderValidator extends BaseValidator implements IValidator<OrderCre
             throw new ValidationException("itemIds is null or empty");
         }
 
-        getExistingItems(itemIds);
+        client.validateUserExists(createDto.getUserId());
+        itemValidator.checkItemsToExistByIds(itemIds);
     }
 
     @Override
@@ -49,6 +51,11 @@ public class OrderValidator extends BaseValidator implements IValidator<OrderCre
 
         if(addedType == ItemAddedType.NOT_UPDATED){
             return;
+        }
+
+        final Long userId = updateDto.getUserId();
+        if(userId != null){
+            client.validateUserExists(userId);
         }
 
         final List<? extends OrderItemCommon> orderItems = getOrderItems(updateDto, addedType);
@@ -63,8 +70,8 @@ public class OrderValidator extends BaseValidator implements IValidator<OrderCre
                 .collect(Collectors.toList());
 
         checkQuantityToNegativeOrZeroValues(quantities);
-        getExistingItems(itemIds);
 
+        itemValidator.checkItemsToExistByIds(itemIds);
     }
 
     public List<Order> checkOrdersToExistence(final List<Long> orderIds){
@@ -132,8 +139,5 @@ public class OrderValidator extends BaseValidator implements IValidator<OrderCre
         }
     }
 
-    private List<Item> getExistingItems(final List<Long> itemIds) {
-        return itemValidator.checkItemsToExistence(itemIds);
-    }
 
 }

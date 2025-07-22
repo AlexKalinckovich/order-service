@@ -15,29 +15,25 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.Mappings;
 import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
-import org.mapstruct.factory.Mappers;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Mapper(componentModel = "spring",
         uses = IOrderItemMapper.class,
         imports = {LocalDateTime.class, OrderStatus.class})
 public interface IOrderMapper {
 
-    IOrderItemMapper orderItemMapper = Mappers.getMapper(IOrderItemMapper.class);
-
-
     @Mappings({
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "orderItems", ignore = true),
-            @Mapping(target = "status", expression = "java(OrderStatus.CREATED)"),
-            @Mapping(target = "orderDate", expression = "java(LocalDateTime.now())")
+            @Mapping(target = "status", qualifiedByName = "mapOrderStatus"),
+            @Mapping(target = "orderDate", qualifiedByName = "mapOrderDate")
     })
     Order toEntity(final OrderCreateDto orderCreateDto);
 
-    @Mapping(target = "orderItems", source = "orderItems", qualifiedByName = "mapOrderItems")
+    @Mapping(target = "orderItems", source = "orderItems")
     OrderResponseDto toResponseDto(Order order);
 
     List<OrderResponseDto> toResponseDtoList(final List<Order> orders);
@@ -46,10 +42,15 @@ public interface IOrderMapper {
     @Mapping(target = "orderItems", ignore = true)
     void updateFromDto(final OrderUpdateDto orderUpdateDto, @MappingTarget final Order order);
 
-    @Named("mapOrderItems")
-    default List<OrderItemResponseDto> mapOrderItems(final List<OrderItem> orderItems) {
-        return orderItems.stream()
-                .map(orderItemMapper::toResponseDto)
-                .collect(Collectors.toList());
+    List<OrderItemResponseDto> mapOrderItems(List<OrderItem> items);
+
+    @Named("mapOrderStatus")
+    default OrderStatus mapOrderStatus(final OrderStatus status) {
+        return Objects.requireNonNullElse(status, OrderStatus.CREATED);
+    }
+
+    @Named("mapOrderDate")
+    default LocalDateTime mapOrderDate(final LocalDateTime orderDate) {
+        return Objects.requireNonNullElseGet(orderDate, LocalDateTime::now);
     }
 }

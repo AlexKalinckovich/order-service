@@ -5,7 +5,6 @@ import com.example.orderservice.dto.item.ItemUpdateDto;
 import com.example.orderservice.exception.item.ItemNotFoundException;
 import com.example.orderservice.model.Item;
 import com.example.orderservice.repository.item.IItemRepository;
-import com.example.orderservice.validators.BaseValidator;
 import com.example.orderservice.validators.IValidator;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class ItemValidator extends BaseValidator implements IValidator<ItemCreateDto, ItemUpdateDto> {
+public class ItemValidator implements IValidator<ItemCreateDto, ItemUpdateDto> {
 
     private final IItemRepository itemRepository;
 
@@ -47,12 +46,12 @@ public class ItemValidator extends BaseValidator implements IValidator<ItemCreat
 
     }
 
-    public List<Item> checkItemsToExistence(final List<Long> itemIds){
+    public List<Item> getExistsItems(final List<Long> itemIds){
         if (itemIds == null || itemIds.isEmpty()) {
             return Collections.emptyList();
         }
 
-        final List<Item> items = itemRepository.findExistingIds(itemIds);
+        final List<Item> items = itemRepository.findExistingItems(itemIds);
 
         if (items.size() != itemIds.size()) {
             final Set<Long> foundIds = items.stream()
@@ -66,6 +65,20 @@ public class ItemValidator extends BaseValidator implements IValidator<ItemCreat
             throw new ItemNotFoundException("Missing items: " + missingIds);
         }
         return items;
+    }
+
+    public List<Long> checkItemsToExistByIds(final List<Long> itemIds){
+        if (itemIds == null || itemIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        final List<Long> existingItemsIds = itemRepository.findExistingItemsIds(itemIds);
+        if (existingItemsIds.size() != itemIds.size()) {
+            final List<Long> missingIds = itemIds.stream()
+                    .filter(id -> !existingItemsIds.contains(id))
+                    .toList();
+            throw new ItemNotFoundException("Missing existingItemsIds: " + missingIds);
+        }
+        return existingItemsIds;
     }
 
     public Item checkItemToExistence(final Long id){
