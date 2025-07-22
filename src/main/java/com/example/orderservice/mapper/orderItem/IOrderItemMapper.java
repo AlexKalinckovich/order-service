@@ -1,0 +1,43 @@
+package com.example.orderservice.mapper.orderItem;
+
+import com.example.orderservice.dto.orderItem.OrderItemCreateDto;
+import com.example.orderservice.dto.orderItem.OrderItemResponseDto;
+import com.example.orderservice.dto.orderItem.OrderItemUpdateDto;
+import com.example.orderservice.mapper.item.IItemMapper;
+import com.example.orderservice.model.OrderItem;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.Mappings;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+
+import java.util.List;
+
+@Mapper(componentModel = "spring", uses = IItemMapper.class)
+public interface IOrderItemMapper {
+
+    @Mapping(source = "item", target = "itemDto")
+    OrderItemResponseDto toResponseDto(OrderItem orderItem);
+
+    @Mappings({
+            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "order", ignore = true),
+            @Mapping(target = "item", source = "itemId", qualifiedByName = "mapItemId"),
+    })
+    OrderItem toEntity(OrderItemCreateDto createDto);
+
+    @Mappings({
+            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "order", ignore = true),
+            @Mapping(target = "item", source = "itemId", qualifiedByName = "mapItemId"),
+    })
+    List<OrderItem> toEntityList(List<OrderItemCreateDto> createDtos);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mappings({
+            @Mapping(target = "order", ignore = true),
+            @Mapping(target = "item", source = "itemId", qualifiedByName = "mapItemId"),
+    })
+    void updateFromDto(OrderItemUpdateDto updateDto, @MappingTarget OrderItem entity);
+}
