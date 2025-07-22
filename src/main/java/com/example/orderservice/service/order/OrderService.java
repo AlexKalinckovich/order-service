@@ -84,6 +84,7 @@ public class OrderService implements IOrderService {
 
         orderMapper.updateFromDto(orderUpdateDto, order);
 
+
         final ItemAddedType addedType = orderUpdateDto.getItemAddedType();
         if (addedType != ItemAddedType.NOT_UPDATED) {
             if (addedType == ItemAddedType.APPEND) {

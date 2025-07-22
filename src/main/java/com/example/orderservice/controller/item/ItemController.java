@@ -4,6 +4,7 @@ import com.example.orderservice.dto.item.ItemCreateDto;
 import com.example.orderservice.dto.item.ItemResponseDto;
 import com.example.orderservice.dto.item.ItemUpdateDto;
 import com.example.orderservice.service.item.ItemService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,25 +26,25 @@ public class ItemController {
     private final ItemService itemService;
 
     @PostMapping("/create")
-    public ResponseEntity<ItemResponseDto> create(@RequestBody final ItemCreateDto itemCreateDto) {
+    public ResponseEntity<ItemResponseDto> create(@Valid @RequestBody final ItemCreateDto itemCreateDto) {
         final ItemResponseDto itemResponseDto = itemService.createItem(itemCreateDto);
         return ResponseEntity.ok(itemResponseDto);
     }
 
     @PutMapping("/update")
-    public ResponseEntity<ItemResponseDto> update(@RequestBody final ItemUpdateDto itemUpdateDto) {
+    public ResponseEntity<ItemResponseDto> update(@Valid @RequestBody final ItemUpdateDto itemUpdateDto) {
         final ItemResponseDto itemResponseDto = itemService.updateItem(itemUpdateDto);
         return ResponseEntity.ok(itemResponseDto);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ItemResponseDto> delete(@PathVariable final Long id) {
+    public ResponseEntity<ItemResponseDto> delete(@Valid @PathVariable final Long id) {
         final ItemResponseDto itemResponseDto = itemService.deleteItem(id);
         return ResponseEntity.ok(itemResponseDto);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ItemResponseDto> get(@PathVariable final Long id) {
+    public ResponseEntity<ItemResponseDto> get(@Valid @PathVariable final Long id) {
         final ItemResponseDto itemResponseDto = itemService.getItemById(id);
         return ResponseEntity.ok(itemResponseDto);
     }

@@ -2,6 +2,7 @@ package com.example.orderservice.dto.order;
 
 import com.example.orderservice.dto.orderItem.OrderItemCreateDto;
 import com.example.orderservice.model.OrderStatus;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import lombok.AllArgsConstructor;
@@ -29,5 +30,6 @@ public class OrderCreateDto {
     private LocalDateTime orderDate;
 
     @NotNull
+    @Valid
     private List<OrderItemCreateDto> orderItems;
 }
