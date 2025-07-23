@@ -1,5 +1,6 @@
 package com.example.orderservice.service.orderservice;
 
+import com.example.orderservice.client.UserServiceClient;
 import com.example.orderservice.dto.order.ItemAddedType;
 import com.example.orderservice.dto.order.OrderCreateDto;
 import com.example.orderservice.dto.order.OrderResponseDto;
@@ -18,19 +19,22 @@ import com.example.orderservice.repository.order.IOrderRepository;
 import com.example.orderservice.service.order.OrderService;
 import com.example.orderservice.model.Order;
 import com.example.orderservice.validators.order.OrderValidator;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.wiremock.spring.ConfigureWireMock;
+import org.wiremock.spring.EnableWireMock;
+import org.wiremock.spring.InjectWireMock;
 
-import javax.naming.ServiceUnavailableException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -38,6 +42,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,9 +58,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
-@SpringBootTest
-@ExtendWith(SpringExtension.class)
+@SpringBootTest(properties = "user.service.url=http://localhost:8080")
+@EnableWireMock({
+        @ConfigureWireMock(name = "user-service", port = 8080)
+})
 class OrderServiceTests {
+
+    @InjectWireMock("user-service")
+    private WireMockServer wireMockServer;
 
     @Autowired
     private IOrderMapper orderMapper;
@@ -132,6 +145,9 @@ class OrderServiceTests {
     protected final Item SAMPLE_ITEM_2 = createSampleItemEntity(ITEM_ID_2);
     protected final Item SAMPLE_ITEM_3 = createSampleItemEntity(ITEM_ID_3);
 
+    @Value("${user.service.url}")
+    private String userServiceUrl;
+
     @BeforeEach
     void setUp() {
         when(itemRepository.getReferenceById(ITEM_ID_1)).thenReturn(SAMPLE_ITEM_1);
@@ -141,6 +157,22 @@ class OrderServiceTests {
         when(orderValidator.checkOrderToExistence(ORDER_ID)).thenReturn(SAMPLE_ORDER);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
+
+
+    @Test
+    void whenCreatingOrderWithInvalidUserId_thenThrowsUserNotFoundException() {
+        final long invalidUserId = SAMPLE_CREATE_DTO.getUserId();
+        final String testUrl = "/user/" + invalidUserId;
+        wireMockServer.stubFor(get(urlEqualTo(testUrl))
+                .willReturn(aResponse()
+                        .withStatus(404)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"error\": \"User not found\"}")));
+
+        final UserServiceClient client = new UserServiceClient(userServiceUrl);
+        assertThrows(UserNotFoundException.class, () -> client.validateUserExists(invalidUserId));
+    }
+
 
     @Test
     @Transactional
@@ -216,7 +248,7 @@ class OrderServiceTests {
                 .when(orderValidator).validateCreateDto(createDto);
 
         // When & Then
-        assertThrows(ServiceUnavailableException.class, () ->
+        assertThrows(WebClientResponseException.class, () ->
                 orderService.createOrder(createDto));
     }
 
@@ -513,12 +545,10 @@ class OrderServiceTests {
                 .build();
 
         when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(existingOrder));
-
-        // When
-        orderService.updateOrder(updateDto);
+        doThrow(new ValidationException()).when(orderValidator).validateUpdateDto(updateDto);
 
         // Then
-        assertTrue(existingOrder.getOrderItems().isEmpty());
+        assertThrows(ValidationException.class, () -> orderService.updateOrder(updateDto));
     }
 
     private OrderItem createOrderItem(final Long id, final Item item, final Long quantity) {

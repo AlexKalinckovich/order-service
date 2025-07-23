@@ -4,11 +4,13 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 import static org.testcontainers.containers.MySQLContainer.MYSQL_PORT;
 
+@Testcontainers
 public abstract class AbstractContainerBaseTests implements AutoCloseable{
 
     protected static final String DRIVER_PATH = "com.mysql.cj.jdbc.Driver";

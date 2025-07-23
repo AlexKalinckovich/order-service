@@ -8,10 +8,10 @@ spring:
     name: order-service
 
   datasource:
-    url: jdbc:mysql://localhost:3308/orderdb?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: ${SPRING_DATASOURCE_URL}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: orderpassword
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
 
   jpa:
     defer-datasource-initialization: true
@@ -29,4 +29,4 @@ spring:
     import: classpath:error-message.properties
 user:
   service:
-    url: "https://localhost:8080"
+    url: ${USER_SERVICE_URL}
