@@ -14,7 +14,7 @@ import com.example.orderservice.exception.GlobalExceptionHandler;
 import com.example.orderservice.model.OrderStatus;
 import com.example.orderservice.service.exception.ExceptionResponseService;
 import com.example.orderservice.service.message.MessageService;
-import com.example.orderservice.service.order.OrderService;
+import com.example.orderservice.service.order.OrderServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -53,7 +53,7 @@ public class OrderControllerTests {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private OrderService orderService;
+    private OrderServiceImpl orderServiceImpl;
 
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -139,7 +139,7 @@ public class OrderControllerTests {
 
     @Test
     void shouldCreateOrder() throws Exception {
-        when(orderService.createOrder(any()))
+        when(orderServiceImpl.createOrder(any()))
                 .thenReturn(responseDto);
 
         mockMvc.perform(post("/order/create")
@@ -153,7 +153,7 @@ public class OrderControllerTests {
 
     @Test
     void shouldUpdateOrder() throws Exception {
-        when(orderService.updateOrder(any()))
+        when(orderServiceImpl.updateOrder(any()))
                 .thenReturn(responseDto);
 
         mockMvc.perform(put("/order/update")
@@ -167,7 +167,7 @@ public class OrderControllerTests {
     @DisplayName("Create Order - Success")
     void testCreateOrder() throws Exception {
 
-        when(orderService.createOrder(any(OrderCreateDto.class))).thenReturn(responseDto);
+        when(orderServiceImpl.createOrder(any(OrderCreateDto.class))).thenReturn(responseDto);
 
         mockMvc.perform(post("/order/create")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -182,7 +182,7 @@ public class OrderControllerTests {
     @DisplayName("Get Order By Id - Success")
     void testGetOrderById() throws Exception {
 
-        when(orderService.getOrderById(STANDARD_ID)).thenReturn(responseDto);
+        when(orderServiceImpl.getOrderById(STANDARD_ID)).thenReturn(responseDto);
 
         mockMvc.perform(get("/order/1"))
                 .andExpect(status().is(HttpStatus.FOUND.value()))
@@ -196,7 +196,7 @@ public class OrderControllerTests {
 
         responseDto.setStatus(OrderStatus.PROCESSING);
 
-        when(orderService.updateOrder(any(OrderUpdateDto.class))).thenReturn(responseDto);
+        when(orderServiceImpl.updateOrder(any(OrderUpdateDto.class))).thenReturn(responseDto);
 
         mockMvc.perform(put("/order/update")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -225,7 +225,7 @@ public class OrderControllerTests {
     @Test
     @DisplayName("Get Order By Id - Not Found")
     void testGetOrderByIdNotFound() throws Exception {
-        when(orderService.getOrderById(99L)).thenThrow(new RuntimeException("Order not found"));
+        when(orderServiceImpl.getOrderById(99L)).thenThrow(new RuntimeException("Order not found"));
 
         mockMvc.perform(get("/order/99"))
                 .andExpect(status().isInternalServerError())
@@ -262,7 +262,7 @@ public class OrderControllerTests {
         );
         responseDto.setOrderItems(orderItems);
 
-        when(orderService.updateOrder(any(OrderUpdateDto.class))).thenReturn(responseDto);
+        when(orderServiceImpl.updateOrder(any(OrderUpdateDto.class))).thenReturn(responseDto);
 
         mockMvc.perform(put("/order/update")
                         .contentType(MediaType.APPLICATION_JSON)

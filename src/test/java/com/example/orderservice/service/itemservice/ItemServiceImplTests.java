@@ -4,10 +4,10 @@ import com.example.orderservice.dto.item.ItemCreateDto;
 import com.example.orderservice.dto.item.ItemResponseDto;
 import com.example.orderservice.dto.item.ItemUpdateDto;
 import com.example.orderservice.exception.item.ItemNotFoundException;
-import com.example.orderservice.mapper.item.IItemMapper;
+import com.example.orderservice.mapper.item.ItemMapper;
 import com.example.orderservice.model.Item;
-import com.example.orderservice.repository.item.IItemRepository;
-import com.example.orderservice.service.item.ItemService;
+import com.example.orderservice.repository.item.ItemRepository;
+import com.example.orderservice.service.item.ItemServiceImpl;
 import com.example.orderservice.validators.Item.ItemValidator;
 import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,19 +39,19 @@ import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-public class ItemServiceTests{
+public class ItemServiceImplTests {
 
     @Autowired
-    private IItemMapper itemMapper;
+    private ItemMapper itemMapper;
 
     @MockitoBean
-    private IItemRepository itemRepository;
+    private ItemRepository itemRepository;
 
     @MockitoBean
     private ItemValidator itemValidator;
 
     @Autowired
-    private ItemService itemService;
+    private ItemServiceImpl itemServiceImpl;
 
     protected static final Long ITEM_ID = 1L;
     protected static final Long NON_EXISTENT_ITEM_ID = 999L;
@@ -114,7 +114,7 @@ public class ItemServiceTests{
         final ItemCreateDto createDto = createSampleItemCreateDto();
 
         // When
-        final ItemResponseDto result = itemService.createItem(createDto);
+        final ItemResponseDto result = itemServiceImpl.createItem(createDto);
 
         // Then
         assertNotNull(result);
@@ -145,7 +145,7 @@ public class ItemServiceTests{
                 .thenReturn(List.of(item1, item2, item3));
 
         // When
-        final List<ItemResponseDto> result = itemService.getAllItemsByIds(itemIds);
+        final List<ItemResponseDto> result = itemServiceImpl.getAllItemsByIds(itemIds);
 
         // Then
         assertEquals(3, result.size());
@@ -160,7 +160,7 @@ public class ItemServiceTests{
         when(itemValidator.checkItemToExistence(ITEM_ID)).thenReturn(expectedItem);
 
         // When
-        final ItemResponseDto result = itemService.getItemById(ITEM_ID);
+        final ItemResponseDto result = itemServiceImpl.getItemById(ITEM_ID);
 
         // Then
         assertNotNull(result);
@@ -178,7 +178,7 @@ public class ItemServiceTests{
 
         // When & Then
         assertThrows(ItemNotFoundException.class, () ->
-                itemService.getItemById(invalidId));
+                itemServiceImpl.getItemById(invalidId));
     }
 
     @Test
@@ -199,7 +199,7 @@ public class ItemServiceTests{
         when(itemRepository.findById(ITEM_ID)).thenReturn(Optional.of(existingItem));
 
         // When
-        ItemResponseDto result = itemService.updateItem(updateDto);
+        ItemResponseDto result = itemServiceImpl.updateItem(updateDto);
 
         // Then
         assertNotNull(result);
@@ -230,7 +230,7 @@ public class ItemServiceTests{
         when(itemRepository.findById(ITEM_ID)).thenReturn(Optional.of(existingItem));
 
         // When
-        final ItemResponseDto result = itemService.updateItem(updateDto);
+        final ItemResponseDto result = itemServiceImpl.updateItem(updateDto);
 
         // Then
         assertEquals(updatedName, result.getName());
@@ -248,7 +248,7 @@ public class ItemServiceTests{
         when(itemValidator.checkItemToExistence(ITEM_ID)).thenReturn(existingItem);
 
         // When
-        final ItemResponseDto result = itemService.deleteItem(ITEM_ID);
+        final ItemResponseDto result = itemServiceImpl.deleteItem(ITEM_ID);
 
         // Then
         assertNotNull(result);
@@ -266,7 +266,7 @@ public class ItemServiceTests{
 
         // When & Then
         assertThrows(ItemNotFoundException.class, () ->
-                itemService.deleteItem(invalidId));
+                itemServiceImpl.deleteItem(invalidId));
         verify(itemRepository, never()).delete(any());
     }
 
@@ -283,7 +283,7 @@ public class ItemServiceTests{
 
         // When & Then
         assertThrows(ValidationException.class, () ->
-                itemService.createItem(invalidDto));
+                itemServiceImpl.createItem(invalidDto));
     }
 
     @Test
@@ -300,7 +300,7 @@ public class ItemServiceTests{
 
         // When & Then
         assertThrows(ValidationException.class, () ->
-                itemService.updateItem(invalidDto));
+                itemServiceImpl.updateItem(invalidDto));
     }
 
 

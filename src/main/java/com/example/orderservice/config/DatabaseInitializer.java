@@ -4,8 +4,8 @@ import com.example.orderservice.model.Item;
 import com.example.orderservice.model.Order;
 import com.example.orderservice.model.OrderItem;
 import com.example.orderservice.model.OrderStatus;
-import com.example.orderservice.repository.item.IItemRepository;
-import com.example.orderservice.repository.order.IOrderRepository;
+import com.example.orderservice.repository.item.ItemRepository;
+import com.example.orderservice.repository.order.OrderRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +21,8 @@ public class DatabaseInitializer {
 
     @Bean
     public CommandLineRunner seedDatabase(
-            IItemRepository itemRepo,
-            IOrderRepository orderRepo
+            ItemRepository itemRepo,
+            OrderRepository orderRepo
     ) {
         return args -> {
             if (itemRepo.count() == 0) {

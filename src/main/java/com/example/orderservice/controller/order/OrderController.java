@@ -3,7 +3,7 @@ package com.example.orderservice.controller.order;
 import com.example.orderservice.dto.order.OrderCreateDto;
 import com.example.orderservice.dto.order.OrderResponseDto;
 import com.example.orderservice.dto.order.OrderUpdateDto;
-import com.example.orderservice.service.order.OrderService;
+import com.example.orderservice.service.order.OrderServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,35 +26,35 @@ import java.util.List;
 @Validated
 public class OrderController {
 
-    private final OrderService orderService;
+    private final OrderServiceImpl orderServiceImpl;
 
     @PostMapping("/create")
     public ResponseEntity<OrderResponseDto> create(@Valid @RequestBody final OrderCreateDto createDto){
-        final OrderResponseDto createdOrder = orderService.createOrder(createDto);
+        final OrderResponseDto createdOrder = orderServiceImpl.createOrder(createDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
     }
 
     @PutMapping("/update")
     public ResponseEntity<OrderResponseDto> update(@Valid @RequestBody final OrderUpdateDto updateDto){
-        final OrderResponseDto updatedOrder = orderService.updateOrder(updateDto);
+        final OrderResponseDto updatedOrder = orderServiceImpl.updateOrder(updateDto);
         return ResponseEntity.status(HttpStatus.OK).body(updatedOrder);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<OrderResponseDto> delete(@PathVariable final Long id){
-        final OrderResponseDto deletedOrder = orderService.deleteOrder(id);
+        final OrderResponseDto deletedOrder = orderServiceImpl.deleteOrder(id);
         return ResponseEntity.status(HttpStatus.FOUND).body(deletedOrder);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponseDto> get(@PathVariable final Long id){
-        final OrderResponseDto order = orderService.getOrderById(id);
+        final OrderResponseDto order = orderServiceImpl.getOrderById(id);
         return ResponseEntity.status(HttpStatus.FOUND).body(order);
     }
 
     @GetMapping("/list/{ids}")
     public ResponseEntity<List<OrderResponseDto>> getOrdersByIds(final @PathVariable List<Long> ids){
-        final List<OrderResponseDto> orders = orderService.getAllOrdersByIds(ids);
+        final List<OrderResponseDto> orders = orderServiceImpl.getAllOrdersByIds(ids);
         return ResponseEntity.status(HttpStatus.FOUND).body(orders);
     }
 }

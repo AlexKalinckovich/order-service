@@ -9,8 +9,8 @@ import com.example.orderservice.dto.orderItem.OrderItemCreateDto;
 import com.example.orderservice.exception.item.ItemNotFoundException;
 import com.example.orderservice.exception.order.OrderNotFoundException;
 import com.example.orderservice.model.Order;
-import com.example.orderservice.repository.order.IOrderRepository;
-import com.example.orderservice.validators.IValidator;
+import com.example.orderservice.repository.order.OrderRepository;
+import com.example.orderservice.validators.Validator;
 import com.example.orderservice.validators.Item.ItemValidator;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -24,10 +24,10 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class OrderValidator implements IValidator<OrderCreateDto, OrderUpdateDto> {
+public class OrderValidator implements Validator<OrderCreateDto, OrderUpdateDto> {
 
     private final ItemValidator itemValidator;
-    private final IOrderRepository orderRepository;
+    private final OrderRepository orderRepository;
 
     private final UserServiceClient client;
 

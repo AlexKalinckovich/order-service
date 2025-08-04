@@ -10,13 +10,13 @@ import com.example.orderservice.dto.orderItem.OrderItemUpdateDto;
 import com.example.orderservice.exception.order.OrderNotFoundException;
 import com.example.orderservice.exception.orderItem.OrderItemNotFoundException;
 import com.example.orderservice.exception.user.UserNotFoundException;
-import com.example.orderservice.mapper.order.IOrderMapper;
+import com.example.orderservice.mapper.order.OrderMapper;
 import com.example.orderservice.model.Item;
 import com.example.orderservice.model.OrderItem;
 import com.example.orderservice.model.OrderStatus;
-import com.example.orderservice.repository.item.IItemRepository;
-import com.example.orderservice.repository.order.IOrderRepository;
-import com.example.orderservice.service.order.OrderService;
+import com.example.orderservice.repository.item.ItemRepository;
+import com.example.orderservice.repository.order.OrderRepository;
+import com.example.orderservice.service.order.OrderServiceImpl;
 import com.example.orderservice.model.Order;
 import com.example.orderservice.validators.order.OrderValidator;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -62,25 +62,25 @@ import static org.mockito.Mockito.when;
 @EnableWireMock({
         @ConfigureWireMock(name = "user-service", port = 8080)
 })
-class OrderServiceTests {
+class OrderServiceImplTests {
 
     @InjectWireMock("user-service")
     private WireMockServer wireMockServer;
 
     @Autowired
-    private IOrderMapper orderMapper;
+    private OrderMapper orderMapper;
 
     @MockitoBean
-    private IOrderRepository orderRepository;
+    private OrderRepository orderRepository;
 
     @MockitoBean
-    private IItemRepository itemRepository;
+    private ItemRepository itemRepository;
 
     @MockitoBean
     private OrderValidator orderValidator;
 
     @Autowired
-    private OrderService orderService;
+    private OrderServiceImpl orderServiceImpl;
 
     private OrderCreateDto createSampleOrderCreateDto() {
         return OrderCreateDto.builder()
@@ -194,7 +194,7 @@ class OrderServiceTests {
         });
 
         // When
-        OrderResponseDto result = orderService.createOrder(createDto);
+        OrderResponseDto result = orderServiceImpl.createOrder(createDto);
 
         // Then
         assertNotNull(result);
@@ -234,7 +234,7 @@ class OrderServiceTests {
 
         // When & Then
         assertThrows(UserNotFoundException.class, () ->
-                orderService.createOrder(createDto));
+                orderServiceImpl.createOrder(createDto));
     }
 
     @Test
@@ -249,7 +249,7 @@ class OrderServiceTests {
 
         // When & Then
         assertThrows(WebClientResponseException.class, () ->
-                orderService.createOrder(createDto));
+                orderServiceImpl.createOrder(createDto));
     }
 
     @Test
@@ -265,7 +265,7 @@ class OrderServiceTests {
                 .thenReturn(List.of(order1, order2, order3));
 
         // When
-        final List<OrderResponseDto> result = orderService.getAllOrdersByIds(orderIds);
+        final List<OrderResponseDto> result = orderServiceImpl.getAllOrdersByIds(orderIds);
 
         // Then
         assertEquals(3, result.size());
@@ -283,7 +283,7 @@ class OrderServiceTests {
         when(orderValidator.checkOrderToExistence(orderId)).thenReturn(expectedOrder);
 
         // When
-        final OrderResponseDto result = orderService.getOrderById(orderId);
+        final OrderResponseDto result = orderServiceImpl.getOrderById(orderId);
 
         // Then
         assertNotNull(result);
@@ -302,7 +302,7 @@ class OrderServiceTests {
 
         // When & Then
         assertThrows(OrderNotFoundException.class, () ->
-                orderService.getOrderById(invalidId));
+                orderServiceImpl.getOrderById(invalidId));
     }
 
     @Test
@@ -324,7 +324,7 @@ class OrderServiceTests {
         });
 
         // When
-        OrderResponseDto result = orderService.createOrder(createDto);
+        OrderResponseDto result = orderServiceImpl.createOrder(createDto);
 
         // Then
         assertEquals(pastDate, result.getOrderDate());
@@ -347,7 +347,7 @@ class OrderServiceTests {
         });
 
         // When
-        OrderResponseDto result = orderService.createOrder(createDto);
+        OrderResponseDto result = orderServiceImpl.createOrder(createDto);
 
         // Then
         assertNotNull(result.getOrderDate());
@@ -376,7 +376,7 @@ class OrderServiceTests {
         when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(existingOrder));
 
         // When
-        orderService.updateOrder(updateDto);
+        orderServiceImpl.updateOrder(updateDto);
 
         // Then
         assertEquals(2, existingOrder.getOrderItems().size());
@@ -409,7 +409,7 @@ class OrderServiceTests {
         when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(existingOrder));
 
         // When
-        orderService.updateOrder(updateDto);
+        orderServiceImpl.updateOrder(updateDto);
 
         // Then
         assertEquals(1, existingOrder.getOrderItems().size());
@@ -440,7 +440,7 @@ class OrderServiceTests {
         when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(existingOrder));
 
         // When
-        orderService.updateOrder(updateDto);
+        orderServiceImpl.updateOrder(updateDto);
 
         // Then
         final Map<Long, Long> quantities = existingOrder
@@ -470,7 +470,7 @@ class OrderServiceTests {
         when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(existingOrder));
 
         // When
-        orderService.updateOrder(updateDto);
+        orderServiceImpl.updateOrder(updateDto);
 
         // Then
         assertEquals(OrderStatus.COMPLETED, existingOrder.getStatus());
@@ -497,7 +497,7 @@ class OrderServiceTests {
 
         // When & Then
         assertThrows(OrderItemNotFoundException.class, () ->
-                orderService.updateOrder(updateDto));
+                orderServiceImpl.updateOrder(updateDto));
     }
 
     @Test
@@ -513,7 +513,7 @@ class OrderServiceTests {
         orderMapper.toResponseDto(existingOrder);
 
         // When
-        final OrderResponseDto result = orderService.deleteOrder(ORDER_ID);
+        final OrderResponseDto result = orderServiceImpl.deleteOrder(ORDER_ID);
 
         // Then
         assertNotNull(result);
@@ -530,7 +530,7 @@ class OrderServiceTests {
 
         // When & Then
         assertThrows(OrderNotFoundException.class, () ->
-                orderService.deleteOrder(invalidId));
+                orderServiceImpl.deleteOrder(invalidId));
     }
 
     @Test
@@ -548,7 +548,7 @@ class OrderServiceTests {
         doThrow(new ValidationException()).when(orderValidator).validateUpdateDto(updateDto);
 
         // Then
-        assertThrows(ValidationException.class, () -> orderService.updateOrder(updateDto));
+        assertThrows(ValidationException.class, () -> orderServiceImpl.updateOrder(updateDto));
     }
 
     private OrderItem createOrderItem(final Long id, final Item item, final Long quantity) {
