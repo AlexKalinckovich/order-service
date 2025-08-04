@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 public class UserServiceClient {
     private final WebClient client;
 
-    public UserServiceClient(@Value("${user.service.url}") String baseUrl) {
+    public UserServiceClient(@Value("${USER_SERVICE_URL}") String baseUrl) {
         this.client = WebClient.builder()
                 .baseUrl(baseUrl)
                 .build();

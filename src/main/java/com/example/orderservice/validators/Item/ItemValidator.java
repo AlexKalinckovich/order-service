@@ -4,8 +4,8 @@ import com.example.orderservice.dto.item.ItemCreateDto;
 import com.example.orderservice.dto.item.ItemUpdateDto;
 import com.example.orderservice.exception.item.ItemNotFoundException;
 import com.example.orderservice.model.Item;
-import com.example.orderservice.repository.item.IItemRepository;
-import com.example.orderservice.validators.IValidator;
+import com.example.orderservice.repository.item.ItemRepository;
+import com.example.orderservice.validators.Validator;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class ItemValidator implements IValidator<ItemCreateDto, ItemUpdateDto> {
+public class ItemValidator implements Validator<ItemCreateDto, ItemUpdateDto> {
 
-    private final IItemRepository itemRepository;
+    private final ItemRepository itemRepository;
 
     @Override
     public void validateCreateDto(final ItemCreateDto createDto) {

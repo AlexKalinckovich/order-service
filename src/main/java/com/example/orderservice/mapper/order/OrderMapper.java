@@ -4,7 +4,7 @@ import com.example.orderservice.dto.order.OrderCreateDto;
 import com.example.orderservice.dto.order.OrderResponseDto;
 import com.example.orderservice.dto.order.OrderUpdateDto;
 import com.example.orderservice.dto.orderItem.OrderItemResponseDto;
-import com.example.orderservice.mapper.orderItem.IOrderItemMapper;
+import com.example.orderservice.mapper.orderItem.OrderItemMapper;
 import com.example.orderservice.model.Order;
 import com.example.orderservice.model.OrderItem;
 import com.example.orderservice.model.OrderStatus;
@@ -21,9 +21,9 @@ import java.util.List;
 import java.util.Objects;
 
 @Mapper(componentModel = "spring",
-        uses = IOrderItemMapper.class,
+        uses = OrderItemMapper.class,
         imports = {LocalDateTime.class, OrderStatus.class})
-public interface IOrderMapper {
+public interface OrderMapper {
 
     @Mappings({
             @Mapping(target = "id", ignore = true),

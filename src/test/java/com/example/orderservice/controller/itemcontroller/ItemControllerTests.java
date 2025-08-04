@@ -7,7 +7,7 @@ import com.example.orderservice.dto.item.ItemResponseDto;
 import com.example.orderservice.dto.item.ItemUpdateDto;
 import com.example.orderservice.exception.GlobalExceptionHandler;
 import com.example.orderservice.service.exception.ExceptionResponseService;
-import com.example.orderservice.service.item.ItemService;
+import com.example.orderservice.service.item.ItemServiceImpl;
 import com.example.orderservice.service.message.MessageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -45,7 +45,7 @@ class ItemControllerTests {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private ItemService itemService;
+    private ItemServiceImpl itemServiceImpl;
 
     private ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -84,7 +84,7 @@ class ItemControllerTests {
     @Test
     @DisplayName("POST /item/create -> success")
     void testCreate_Success() throws Exception {
-        when(itemService.createItem(any())).thenReturn(responseDto);
+        when(itemServiceImpl.createItem(any())).thenReturn(responseDto);
 
         mockMvc.perform(post("/item/create")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -120,7 +120,7 @@ class ItemControllerTests {
     @Test
     @DisplayName("PUT /item/update -> success")
     void testUpdate_Success() throws Exception {
-        when(itemService.updateItem(any())).thenReturn(responseDto);
+        when(itemServiceImpl.updateItem(any())).thenReturn(responseDto);
 
         mockMvc.perform(put("/item/update")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -144,7 +144,7 @@ class ItemControllerTests {
     @Test
     @DisplayName("DELETE /item/{id} -> success")
     void testDelete_Success() throws Exception {
-        when(itemService.deleteItem(ID)).thenReturn(responseDto);
+        when(itemServiceImpl.deleteItem(ID)).thenReturn(responseDto);
 
         mockMvc.perform(delete("/item/{id}", ID))
                 .andExpect(status().isOk())
@@ -154,7 +154,7 @@ class ItemControllerTests {
     @Test
     @DisplayName("DELETE /item/{id} -> not found")
     void testDelete_NotFound() throws Exception {
-        when(itemService.deleteItem(ID)).thenThrow(new RuntimeException("Not found"));
+        when(itemServiceImpl.deleteItem(ID)).thenThrow(new RuntimeException("Not found"));
 
         mockMvc.perform(delete("/item/{id}", ID))
                 .andExpect(status().isInternalServerError())
@@ -165,7 +165,7 @@ class ItemControllerTests {
     @Test
     @DisplayName("GET /item/{id} -> success")
     void testGetById_Success() throws Exception {
-        when(itemService.getItemById(ID)).thenReturn(responseDto);
+        when(itemServiceImpl.getItemById(ID)).thenReturn(responseDto);
 
         mockMvc.perform(get("/item/{id}", ID))
                 .andExpect(status().isOk())
@@ -175,7 +175,7 @@ class ItemControllerTests {
     @Test
     @DisplayName("GET /item/{id} -> not found")
     void testGetById_NotFound() throws Exception {
-        when(itemService.getItemById(ID)).thenThrow(new RuntimeException("Missing"));
+        when(itemServiceImpl.getItemById(ID)).thenThrow(new RuntimeException("Missing"));
 
         mockMvc.perform(get("/item/{id}", ID))
                 .andExpect(status().isInternalServerError())
@@ -191,7 +191,7 @@ class ItemControllerTests {
                 ItemResponseDto.builder()
                         .id(2L).name("Another").price(BigDecimal.valueOf(15)).build()
         );
-        when(itemService.getAllItemsByIds(List.of(1L,2L))).thenReturn(items);
+        when(itemServiceImpl.getAllItemsByIds(List.of(1L,2L))).thenReturn(items);
 
         mockMvc.perform(get("/item/list/{ids}", "1,2"))
                 .andExpect(status().isOk())
@@ -201,7 +201,7 @@ class ItemControllerTests {
     @Test
     @DisplayName("GET /item/list/{ids} -> empty list")
     void testGetItemsByIds_Empty() throws Exception {
-        when(itemService.getAllItemsByIds(List.of(3L))).thenReturn(List.of());
+        when(itemServiceImpl.getAllItemsByIds(List.of(3L))).thenReturn(List.of());
 
         mockMvc.perform(get("/item/list/{ids}", "3"))
                 .andExpect(status().isOk())

@@ -15,7 +15,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
-public interface IItemMapper {
+public interface ItemMapper {
 
     @Mappings({
         @Mapping(target = "id", ignore = true),

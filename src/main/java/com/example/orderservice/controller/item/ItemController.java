@@ -3,7 +3,7 @@ package com.example.orderservice.controller.item;
 import com.example.orderservice.dto.item.ItemCreateDto;
 import com.example.orderservice.dto.item.ItemResponseDto;
 import com.example.orderservice.dto.item.ItemUpdateDto;
-import com.example.orderservice.service.item.ItemService;
+import com.example.orderservice.service.item.ItemServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,35 +23,35 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ItemController {
 
-    private final ItemService itemService;
+    private final ItemServiceImpl itemServiceImpl;
 
     @PostMapping("/create")
     public ResponseEntity<ItemResponseDto> create(@Valid @RequestBody final ItemCreateDto itemCreateDto) {
-        final ItemResponseDto itemResponseDto = itemService.createItem(itemCreateDto);
+        final ItemResponseDto itemResponseDto = itemServiceImpl.createItem(itemCreateDto);
         return ResponseEntity.ok(itemResponseDto);
     }
 
     @PutMapping("/update")
     public ResponseEntity<ItemResponseDto> update(@Valid @RequestBody final ItemUpdateDto itemUpdateDto) {
-        final ItemResponseDto itemResponseDto = itemService.updateItem(itemUpdateDto);
+        final ItemResponseDto itemResponseDto = itemServiceImpl.updateItem(itemUpdateDto);
         return ResponseEntity.ok(itemResponseDto);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ItemResponseDto> delete(@Valid @PathVariable final Long id) {
-        final ItemResponseDto itemResponseDto = itemService.deleteItem(id);
+        final ItemResponseDto itemResponseDto = itemServiceImpl.deleteItem(id);
         return ResponseEntity.ok(itemResponseDto);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ItemResponseDto> get(@Valid @PathVariable final Long id) {
-        final ItemResponseDto itemResponseDto = itemService.getItemById(id);
+        final ItemResponseDto itemResponseDto = itemServiceImpl.getItemById(id);
         return ResponseEntity.ok(itemResponseDto);
     }
 
     @GetMapping("/list/{ids}")
     public ResponseEntity<List<ItemResponseDto>> getItemsByIds(@PathVariable final List<Long> ids) {
-        final List<ItemResponseDto> items = itemService.getAllItemsByIds(ids);
+        final List<ItemResponseDto> items = itemServiceImpl.getAllItemsByIds(ids);
         return ResponseEntity.ok(items);
     }
 

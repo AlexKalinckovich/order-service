@@ -1,6 +1,6 @@
 package com.example.orderservice.validators;
 
-public interface IValidator<C, U> {
+public interface Validator<C, U> {
 
     void validateCreateDto(C createDto);
 
