@@ -1,5 +1,6 @@
 package com.example.orderservice.service.order;
 
+import com.example.orderservice.dto.event.PaymentStatus;
 import com.example.orderservice.dto.order.OrderCreateDto;
 import com.example.orderservice.dto.order.OrderResponseDto;
 import com.example.orderservice.dto.order.OrderUpdateDto;
@@ -18,4 +19,5 @@ public interface OrderService {
 
     OrderResponseDto deleteOrder(final Long orderId);
 
+    void updateOrderStatus(Long orderId, PaymentStatus paymentStatus);
 }

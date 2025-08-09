@@ -28,8 +28,8 @@ public interface OrderMapper {
     @Mappings({
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "orderItems", ignore = true),
-            @Mapping(target = "status", qualifiedByName = "mapOrderStatus"),
-            @Mapping(target = "orderDate", qualifiedByName = "mapOrderDate")
+            @Mapping(target = "status", ignore = true, qualifiedByName = "mapOrderStatus"),
+            @Mapping(target = "orderDate", ignore = true, qualifiedByName = "mapOrderDate")
     })
     Order toEntity(final OrderCreateDto orderCreateDto);
 

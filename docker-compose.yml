@@ -8,7 +8,7 @@ services:
     ports:
       - "8083:8080"
     depends_on:
-      order-db:
+      order-db-local:
         condition: service_healthy
     container_name: order-service
     environment:
