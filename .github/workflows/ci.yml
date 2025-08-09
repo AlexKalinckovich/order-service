@@ -1,10 +1,10 @@
 name: SonarQube
 on:
   push:
-    branches:
-      - master
+    branches: [ master ]
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches: [ master ]
+
 env:
   SPRING_DATASOURCE_URL: ${{ env.SPRING_DATASOURCE_URL }}
   SPRING_DATASOURCE_USERNAME: ${{ env.SPRING_DATASOURCE_USERNAME }}
