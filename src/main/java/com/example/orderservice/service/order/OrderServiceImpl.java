@@ -1,5 +1,6 @@
 package com.example.orderservice.service.order;
 
+import com.example.orderservice.dto.event.PaymentStatus;
 import com.example.orderservice.dto.order.ItemAddedType;
 import com.example.orderservice.dto.order.OrderCreateDto;
 import com.example.orderservice.dto.order.OrderResponseDto;
@@ -8,11 +9,13 @@ import com.example.orderservice.dto.orderItem.OrderItemCreateDto;
 import com.example.orderservice.dto.orderItem.OrderItemUpdateDto;
 import com.example.orderservice.exception.order.OrderNotFoundException;
 import com.example.orderservice.exception.orderItem.OrderItemNotFoundException;
+import com.example.orderservice.kafka.OrderEventPublisher;
 import com.example.orderservice.mapper.order.OrderMapper;
 import com.example.orderservice.mapper.orderItem.OrderItemMapper;
 import com.example.orderservice.model.Item;
 import com.example.orderservice.model.Order;
 import com.example.orderservice.model.OrderItem;
+import com.example.orderservice.model.OrderStatus;
 import com.example.orderservice.repository.item.ItemRepository;
 import com.example.orderservice.repository.order.OrderRepository;
 import com.example.orderservice.validators.order.OrderValidator;
@@ -21,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -34,6 +38,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final ItemRepository itemRepository;
 
+    private final OrderEventPublisher orderEventPublisher;
 
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
@@ -48,17 +53,34 @@ public class OrderServiceImpl implements OrderService {
         final Order createOrder = orderMapper.toEntity(orderCreateDto);
 
         final List<OrderItem> orderItems = orderItemMapper.toEntityList(orderCreateDto.getOrderItems());
-        for (final OrderItem orderItem : orderItems) {
-            final Item item = itemRepository.getReferenceById(orderItem.getItem().getId());
-            orderItem.setOrder(createOrder);
-            orderItem.setItem(item);
-        }
 
+        final List<Long> itemIds = orderItems.stream()
+                .map(oi -> oi.getItem().getId())
+                .distinct()
+                .toList();
+        final List<Item> items = itemRepository.findExistingItems(itemIds);
+
+        final Map<Long, Item> itemById = items.stream()
+                .collect(Collectors.toMap(Item::getId, Function.identity()));
+
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        for (final OrderItem oi : orderItems) {
+            oi.setOrder(createOrder);
+
+            final Item orderedItem = itemById.get(oi.getItem().getId());
+            totalPrice = totalPrice.add(
+                    orderedItem.getPrice().multiply(BigDecimal.valueOf(oi.getQuantity()))
+            );
+            oi.setItem(orderedItem);
+        }
         createOrder.getOrderItems().addAll(orderItems);
 
-        final Order order = orderRepository.save(createOrder);
-        return orderMapper.toResponseDto(order);
+        final Order saved = orderRepository.save(createOrder);
+
+        orderEventPublisher.publishOrderCreated(saved,totalPrice);
+        return orderMapper.toResponseDto(saved);
     }
+
 
     @Transactional(readOnly = true)
     @Override
@@ -112,6 +134,16 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.delete(order);
 
         return response;
+    }
+
+    @Override
+    public void updateOrderStatus(final Long orderId, final PaymentStatus paymentStatus) {
+        final Order order = orderValidator.checkOrderToExistence(orderId);
+        final OrderStatus status = paymentStatus == PaymentStatus.SUCCESS ?
+                OrderStatus.PAID :
+                OrderStatus.UNPAID;
+        order.setStatus(status);
+        orderRepository.save(order);
     }
 
     private void appendOrderItems(final Order order, final List<OrderItemCreateDto> createDtos) {

@@ -1,8 +1,10 @@
 package com.example.orderservice.model;
 
 public enum OrderStatus {
+    PAID,
+    UNPAID,
     CREATED,
-    SHIPPED,
     PROCESSING,
-    COMPLETED
+    COMPLETED,
+    CANCELED
 }
