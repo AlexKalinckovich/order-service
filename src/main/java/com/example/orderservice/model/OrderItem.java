@@ -14,11 +14,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "order_items")
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString(exclude = {"order", "item"})
 @Data
 @Builder
 public class OrderItem {

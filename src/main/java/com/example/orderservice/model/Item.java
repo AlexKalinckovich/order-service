@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 @Table(name = "items")
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = "orderItems")
 @Data
 @Builder
 public class Item {
