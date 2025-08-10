@@ -1,3 +1,13 @@
 package com.example.orderservice.dto.event;
 
-public record PaymentEventDto(Long orderId, PaymentStatus paymentStatus){ }
+import lombok.Builder;
+
+import java.time.LocalDateTime;
+
+@Builder
+public record PaymentEventDto(
+        String paymentId,
+        Long orderId,
+        LocalDateTime date,
+        PaymentStatus paymentStatus
+) { }

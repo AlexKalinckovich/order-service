@@ -21,6 +21,7 @@ import com.example.orderservice.repository.order.OrderRepository;
 import com.example.orderservice.validators.order.OrderValidator;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Qualifier("orderServiceImpl")
 @Transactional(readOnly = true)
 public class OrderServiceImpl implements OrderService {
 
@@ -137,6 +139,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void updateOrderStatus(final Long orderId, final PaymentStatus paymentStatus) {
         final Order order = orderValidator.checkOrderToExistence(orderId);
         final OrderStatus status = paymentStatus == PaymentStatus.SUCCESS ?
