@@ -8,6 +8,7 @@ import com.example.orderservice.mapper.item.ItemMapper;
 import com.example.orderservice.model.Item;
 import com.example.orderservice.repository.item.ItemRepository;
 import com.example.orderservice.service.item.ItemServiceImpl;
+import com.example.orderservice.util.AbstractContainerBaseTest;
 import com.example.orderservice.validators.Item.ItemValidator;
 import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,10 +40,7 @@ import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-public class ItemServiceImplTests {
-
-    @Autowired
-    private ItemMapper itemMapper;
+public class ItemServiceImplTests extends AbstractContainerBaseTest {
 
     @MockitoBean
     private ItemRepository itemRepository;

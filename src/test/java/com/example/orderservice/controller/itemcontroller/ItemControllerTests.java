@@ -5,8 +5,9 @@ import com.example.orderservice.controller.item.ItemController;
 import com.example.orderservice.dto.item.ItemCreateDto;
 import com.example.orderservice.dto.item.ItemResponseDto;
 import com.example.orderservice.dto.item.ItemUpdateDto;
+import com.example.orderservice.exception.ErrorMessage;
 import com.example.orderservice.exception.GlobalExceptionHandler;
-import com.example.orderservice.service.exception.ExceptionResponseService;
+import com.example.orderservice.exception.response.ExceptionResponseService;
 import com.example.orderservice.service.item.ItemServiceImpl;
 import com.example.orderservice.service.message.MessageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,7 +48,7 @@ class ItemControllerTests {
     @MockitoBean
     private ItemServiceImpl itemServiceImpl;
 
-    private ObjectMapper objectMapper = new ObjectMapper()
+    private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
@@ -103,7 +104,7 @@ class ItemControllerTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Validation error"));
+                .andExpect(jsonPath("$.errorCode").value(ErrorMessage.VALIDATION_ERROR.name()));
     }
 
     @Test
@@ -114,7 +115,7 @@ class ItemControllerTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Validation error"));
+                .andExpect(jsonPath("$.errorCode").value(ErrorMessage.VALIDATION_ERROR.name()));
     }
 
     @Test
@@ -138,7 +139,7 @@ class ItemControllerTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Validation error"));
+                .andExpect(jsonPath("$.errorCode").value(ErrorMessage.VALIDATION_ERROR.name()));
     }
 
     @Test
@@ -158,8 +159,8 @@ class ItemControllerTests {
 
         mockMvc.perform(delete("/item/{id}", ID))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.error").value("Server error"))
-                .andExpect(jsonPath("$.details.Errors").value("Not found"));
+                .andExpect(jsonPath("$.errorCode").value(ErrorMessage.SERVER_ERROR.name()))
+                .andExpect(jsonPath("$.details.message").value("Not found"));
     }
 
     @Test
@@ -179,8 +180,8 @@ class ItemControllerTests {
 
         mockMvc.perform(get("/item/{id}", ID))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.error").value("Server error"))
-                .andExpect(jsonPath("$.details.Errors").value("Missing"));
+                .andExpect(jsonPath("$.errorCode").value(ErrorMessage.SERVER_ERROR.name()))
+                .andExpect(jsonPath("$.details.message").value("Missing"));
     }
 
     @Test
