@@ -3,7 +3,6 @@ package com.example.orderservice.controller.ordercontroller;
 import com.example.orderservice.config.MessageConfig;
 import com.example.orderservice.controller.order.OrderController;
 import com.example.orderservice.dto.item.ItemResponseDto;
-import com.example.orderservice.dto.order.ItemAddedType;
 import com.example.orderservice.dto.order.OrderCreateDto;
 import com.example.orderservice.dto.order.OrderResponseDto;
 import com.example.orderservice.dto.order.OrderUpdateDto;
@@ -12,7 +11,7 @@ import com.example.orderservice.dto.orderItem.OrderItemResponseDto;
 import com.example.orderservice.dto.orderItem.OrderItemUpdateDto;
 import com.example.orderservice.exception.GlobalExceptionHandler;
 import com.example.orderservice.model.OrderStatus;
-import com.example.orderservice.service.exception.ExceptionResponseService;
+import com.example.orderservice.exception.response.ExceptionResponseService;
 import com.example.orderservice.service.message.MessageService;
 import com.example.orderservice.service.order.OrderServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -123,9 +122,8 @@ public class OrderControllerTests {
                 .userId(USER_ID)
                 .status(OrderStatus.PROCESSING)
                 .orderDate(LocalDateTime.now().minusDays(2))
-                .itemAddedType(ItemAddedType.UPDATE)
-                .orderItemsToAdd(List.of(itemCreate2))
-                .orderItemsToUpdate(List.of(updateItem))
+                .itemsToAdd(List.of(itemCreate2))
+                .itemsToUpdate(List.of(updateItem))
                 .build();
 
         responseDto = OrderResponseDto.builder()
@@ -185,7 +183,7 @@ public class OrderControllerTests {
         when(orderServiceImpl.getOrderById(STANDARD_ID)).thenReturn(responseDto);
 
         mockMvc.perform(get("/order/1"))
-                .andExpect(status().is(HttpStatus.FOUND.value()))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(STANDARD_ID))
                 .andExpect(jsonPath("$.userId").value(USER_ID));
     }
@@ -229,7 +227,7 @@ public class OrderControllerTests {
 
         mockMvc.perform(get("/order/99"))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.details.Errors").value("Order not found"));
+                .andExpect(jsonPath("$.details.message").value("Order not found"));
     }
 
     @Test
@@ -240,8 +238,7 @@ public class OrderControllerTests {
                 .userId(STANDARD_ID)
                 .status(OrderStatus.CREATED)
                 .orderDate(LocalDateTime.now().minusDays(1))
-                .itemAddedType(ItemAddedType.APPEND)
-                .orderItemsToAdd(List.of(OrderItemCreateDto.builder().itemId(123L).quantity(STANDARD_ID).build()))
+                .itemsToAdd(List.of(OrderItemCreateDto.builder().itemId(123L).quantity(STANDARD_ID).build()))
                 .build();
 
 
@@ -275,7 +272,7 @@ public class OrderControllerTests {
     @DisplayName("Delete Order - Not Found")
     void testDeleteOrderNotFound() throws Exception {
         mockMvc.perform(delete("/order/999"))
-                .andExpect(status().is(HttpStatus.FOUND.value()));
+                .andExpect(status().isOk());
     }
 
     @Test

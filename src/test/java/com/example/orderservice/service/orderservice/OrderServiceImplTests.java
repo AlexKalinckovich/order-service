@@ -1,7 +1,6 @@
 package com.example.orderservice.service.orderservice;
 
 import com.example.orderservice.client.UserServiceClient;
-import com.example.orderservice.dto.order.ItemAddedType;
 import com.example.orderservice.dto.order.OrderCreateDto;
 import com.example.orderservice.dto.order.OrderResponseDto;
 import com.example.orderservice.dto.order.OrderUpdateDto;
@@ -18,6 +17,7 @@ import com.example.orderservice.repository.item.ItemRepository;
 import com.example.orderservice.repository.order.OrderRepository;
 import com.example.orderservice.service.order.OrderServiceImpl;
 import com.example.orderservice.model.Order;
+import com.example.orderservice.util.AbstractContainerBaseTest;
 import com.example.orderservice.validators.order.OrderValidator;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import jakarta.validation.ValidationException;
@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.mockito.ArgumentCaptor;
+import org.mockito.stubbing.OngoingStubbing;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -58,11 +59,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
-@SpringBootTest(properties = "user.service.url=http://localhost:8080")
+@SpringBootTest
 @EnableWireMock({
         @ConfigureWireMock(name = "user-service", port = 8080)
 })
-class OrderServiceImplTests {
+class OrderServiceImplTests extends AbstractContainerBaseTest {
 
     @InjectWireMock("user-service")
     private WireMockServer wireMockServer;
@@ -98,8 +99,7 @@ class OrderServiceImplTests {
                 .id(orderId)
                 .userId(USER_ID)
                 .status(OrderStatus.PROCESSING)
-                .itemAddedType(ItemAddedType.APPEND)
-                .orderItemsToAdd(List.of(
+                .itemsToAdd(List.of(
                         OrderItemCreateDto.builder().itemId(ITEM_ID_3).quantity(3L).build()
                 ))
                 .build();
@@ -189,10 +189,11 @@ class OrderServiceImplTests {
 
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order savedOrder = invocation.getArgument(0);
-            savedOrder.setId(ORDER_ID); // Simulate ID assignment
+            savedOrder.setId(ORDER_ID);
             return savedOrder;
         });
 
+        when(itemRepository.findExistingItems(any())).thenReturn(List.of(SAMPLE_ITEM_1, SAMPLE_ITEM_2));
         // When
         OrderResponseDto result = orderServiceImpl.createOrder(createDto);
 
@@ -367,8 +368,7 @@ class OrderServiceImplTests {
         OrderUpdateDto updateDto = OrderUpdateDto.builder()
                 .id(ORDER_ID)
                 .status(OrderStatus.PROCESSING)
-                .itemAddedType(ItemAddedType.APPEND)
-                .orderItemsToAdd(List.of(
+                .itemsToAdd(List.of(
                         OrderItemCreateDto.builder().itemId(ITEM_ID_2).quantity(3L).build()
                 ))
                 .build();
@@ -400,8 +400,7 @@ class OrderServiceImplTests {
         final OrderUpdateDto updateDto = OrderUpdateDto.builder()
                 .id(ORDER_ID)
                 .status(OrderStatus.PROCESSING)
-                .itemAddedType(ItemAddedType.REPLACE)
-                .orderItemsToAdd(List.of(
+                .itemsToAdd(List.of(
                         OrderItemCreateDto.builder().itemId(ITEM_ID_3).quantity(4L).build()
                 ))
                 .build();
@@ -412,9 +411,9 @@ class OrderServiceImplTests {
         orderServiceImpl.updateOrder(updateDto);
 
         // Then
-        assertEquals(1, existingOrder.getOrderItems().size());
-        assertEquals(ITEM_ID_3, existingOrder.getOrderItems().getFirst().getItem().getId());
-        assertEquals(4L, existingOrder.getOrderItems().getFirst().getQuantity());
+        assertEquals(3L, existingOrder.getOrderItems().size());
+        assertEquals(ITEM_ID_1, existingOrder.getOrderItems().getFirst().getItem().getId());
+        assertEquals(2L, existingOrder.getOrderItems().getFirst().getQuantity());
     }
 
     @Test
@@ -430,10 +429,9 @@ class OrderServiceImplTests {
         final OrderUpdateDto updateDto = OrderUpdateDto.builder()
                 .id(ORDER_ID)
                 .status(OrderStatus.PROCESSING)
-                .itemAddedType(ItemAddedType.UPDATE)
-                .orderItemsToUpdate(List.of(
-                        OrderItemUpdateDto.builder().id(1L).quantity(5L).build(),
-                        OrderItemUpdateDto.builder().id(2L).quantity(3L).build()
+                .itemsToUpdate(List.of(
+                        OrderItemUpdateDto.builder().id(1L).itemId(ITEM_ID_1).quantity(5L).build(),
+                        OrderItemUpdateDto.builder().id(2L).itemId(ITEM_ID_2).quantity(3L).build()
                 ))
                 .build();
 
@@ -464,7 +462,6 @@ class OrderServiceImplTests {
                 .id(ORDER_ID)
                 .userId(USER_ID + 1)
                 .status(OrderStatus.COMPLETED)
-                .itemAddedType(ItemAddedType.NOT_UPDATED)
                 .build();
 
         when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(existingOrder));
@@ -487,14 +484,14 @@ class OrderServiceImplTests {
 
         final OrderUpdateDto updateDto = OrderUpdateDto.builder()
                 .id(ORDER_ID)
-                .itemAddedType(ItemAddedType.UPDATE)
-                .orderItemsToUpdate(List.of(
-                        OrderItemUpdateDto.builder().id(999L).quantity(5L).build()
+                .itemsToUpdate(List.of(
+                        OrderItemUpdateDto.builder().id(999L).itemId(ITEM_ID_1).quantity(5L).build()
                 ))
                 .build();
 
         when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(existingOrder));
-
+        doThrow(new OrderItemNotFoundException(1L))
+                .when(orderValidator).validateUpdateDto(updateDto);
         // When & Then
         assertThrows(OrderItemNotFoundException.class, () ->
                 orderServiceImpl.updateOrder(updateDto));
@@ -540,8 +537,7 @@ class OrderServiceImplTests {
         final Order existingOrder = createSampleOrderEntity(ORDER_ID);
         final OrderUpdateDto updateDto = OrderUpdateDto.builder()
                 .id(ORDER_ID)
-                .itemAddedType(ItemAddedType.APPEND)
-                .orderItemsToAdd(null)
+                .itemsToAdd(null)
                 .build();
 
         when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(existingOrder));
