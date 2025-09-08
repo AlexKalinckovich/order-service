@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="3" author="dev">
+        <insert tableName="items">
+            <column name="name" value="Wireless Mouse"/>
+            <column name="price" value="29.99"/>
+        </insert>
+        <insert tableName="items">
+            <column name="name" value="Mechanical Keyboard"/>
+            <column name="price" value="89.99"/>
+        </insert>
+        <insert tableName="items">
+            <column name="name" value="USB-C Hub"/>
+            <column name="price" value="49.95"/>
+        </insert>
+        <insert tableName="items">
+            <column name="name" value="Noise Cancelling Headphones"/>
+            <column name="price" value="199.99"/>
+        </insert>
+        <insert tableName="items">
+            <column name="name" value="Portable SSD 1TB"/>
+            <column name="price" value="129.95"/>
+        </insert>
+        <insert tableName="items">
+            <column name="name" value="Ergonomic Chair"/>
+            <column name="price" value="259.50"/>
+        </insert>
+        <insert tableName="items">
+            <column name="name" value="Smartwatch"/>
+            <column name="price" value="249.00"/>
+        </insert>
+        <insert tableName="items">
+            <column name="name" value="Webcam 1080p"/>
+            <column name="price" value="79.99"/>
+        </insert>
+        <insert tableName="items">
+            <column name="name" value="Desk Lamp"/>
+            <column name="price" value="39.95"/>
+        </insert>
+        <insert tableName="items">
+            <column name="name" value="Bluetooth Speaker"/>
+            <column name="price" value="59.99"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

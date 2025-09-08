@@ -13,6 +13,7 @@ import org.hibernate.validator.constraints.Range;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -32,10 +33,9 @@ public class OrderUpdateDto {
     @Past
     private LocalDateTime orderDate;
 
-    @NotNull
-    private ItemAddedType itemAddedType;
+    private Set<Long> idsToRemove;
 
-    private List<OrderItemCreateDto> orderItemsToAdd;
+    private List<OrderItemCreateDto> itemsToAdd;
 
-    private List<OrderItemUpdateDto> orderItemsToUpdate;
+    private List<OrderItemUpdateDto> itemsToUpdate;
 }

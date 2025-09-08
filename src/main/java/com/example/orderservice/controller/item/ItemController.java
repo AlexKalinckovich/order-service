@@ -55,4 +55,10 @@ public class ItemController {
         return ResponseEntity.ok(items);
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<ItemResponseDto>> getAllItems() {
+        final List<ItemResponseDto> items = itemServiceImpl.getAllItems();
+        return ResponseEntity.ok().body(items);
+    }
+
 }

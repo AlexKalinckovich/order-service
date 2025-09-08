@@ -1,11 +1,11 @@
 package com.example.orderservice.validators.order;
 
 import com.example.orderservice.client.UserServiceClient;
-import com.example.orderservice.dto.order.ItemAddedType;
 import com.example.orderservice.dto.order.OrderCreateDto;
 import com.example.orderservice.dto.order.OrderUpdateDto;
 import com.example.orderservice.dto.orderItem.OrderItemCommon;
 import com.example.orderservice.dto.orderItem.OrderItemCreateDto;
+import com.example.orderservice.dto.orderItem.OrderItemUpdateDto;
 import com.example.orderservice.exception.item.ItemNotFoundException;
 import com.example.orderservice.exception.order.OrderNotFoundException;
 import com.example.orderservice.model.Order;
@@ -16,7 +16,10 @@ import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -33,45 +36,46 @@ public class OrderValidator implements Validator<OrderCreateDto, OrderUpdateDto>
 
     @Override
     public void validateCreateDto(final OrderCreateDto createDto) {
-        final List<Long> itemIds = createDto.getOrderItems()
+        final Set<Long> itemIds = createDto.getOrderItems()
                 .stream()
                 .map(OrderItemCreateDto::getItemId)
-                .toList();
+                .collect(Collectors.toSet());
         if(itemIds.isEmpty()) {
             throw new ValidationException("itemIds is null or empty");
         }
 
-        client.validateUserExists(createDto.getUserId());
+        validateUserExistence(createDto.getUserId());
         itemValidator.checkItemsToExistByIds(itemIds);
     }
 
     @Override
     public void validateUpdateDto(final OrderUpdateDto updateDto) {
-        final ItemAddedType addedType = updateDto.getItemAddedType();
+        final Set<Long> toRemove = safeSet(updateDto.getIdsToRemove());
+        final List<OrderItemUpdateDto> toUpdate = safeList(updateDto.getItemsToUpdate());
+        final List<OrderItemCreateDto> toAdd = safeList(updateDto.getItemsToAdd());
 
-        if(addedType == ItemAddedType.NOT_UPDATED){
-            return;
+        final Set<Long> allIds = new HashSet<>();
+        allIds.addAll(toRemove);
+        allIds.addAll(toUpdate.stream().map(OrderItemUpdateDto::getItemId).toList());
+        allIds.addAll(toAdd.stream().map(OrderItemCreateDto::getItemId).toList());
+
+        if (!allIds.isEmpty()) {
+            itemValidator.checkItemsToExistByIds(allIds);
         }
 
-        final Long userId = updateDto.getUserId();
-        if(userId != null){
-            client.validateUserExists(userId);
-        }
+    }
 
-        final List<? extends OrderItemCommon> orderItems = getOrderItems(updateDto, addedType);
+    private Set<Long> safeSet(final Set<Long> input) {
+        return input != null ? new HashSet<>(input) : new HashSet<>();
+    }
 
-        validateOrderItems(orderItems, addedType);
+    private <T> List<T> safeList(final List<T> input) {
+        return input != null ? new ArrayList<>(input) : new ArrayList<>();
+    }
 
-        final List<Long> quantities = orderItems.stream()
-                .map(OrderItemCommon::getQuantity)
-                .collect(Collectors.toList());
-        final List<Long> itemIds = orderItems.stream()
-                .map(OrderItemCommon::getItemId)
-                .collect(Collectors.toList());
 
-        checkQuantityToNegativeOrZeroValues(quantities);
-
-        itemValidator.checkItemsToExistByIds(itemIds);
+    public void validateUserExistence(final Long userId) {
+        client.validateUserExists(userId);
     }
 
     public List<Order> checkOrdersToExistence(final List<Long> orderIds){
@@ -107,37 +111,5 @@ public class OrderValidator implements Validator<OrderCreateDto, OrderUpdateDto>
 
         return order.get();
     }
-
-
-    private void validateOrderItems(final List<? extends OrderItemCommon> items,
-                                    final ItemAddedType addedType) {
-        if (items == null || items.isEmpty()) {
-            final String message = (addedType == ItemAddedType.APPEND || addedType == ItemAddedType.REPLACE)
-                    ? "createOrderItem is null or empty"
-                    : "updateOrderItems is null or empty";
-            throw new ValidationException(message);
-        }
-    }
-
-    private List<? extends OrderItemCommon> getOrderItems(final OrderUpdateDto updateDto,
-                                                          final ItemAddedType addedType) {
-        List<? extends OrderItemCommon> result;
-
-        if (addedType == ItemAddedType.APPEND || addedType == ItemAddedType.REPLACE) {
-            result = updateDto.getOrderItemsToAdd();
-        } else {
-            result = updateDto.getOrderItemsToUpdate();
-        }
-
-        return result;
-    }
-
-    private void checkQuantityToNegativeOrZeroValues(final List<Long> quantities){
-        final List<Long> negativeQuantities = quantities.stream().filter((q) -> q < 1).toList();
-        if(!negativeQuantities.isEmpty()) {
-            throw new ValidationException("Cannot handle negative quantity: " + negativeQuantities);
-        }
-    }
-
 
 }

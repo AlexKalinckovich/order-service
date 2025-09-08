@@ -1,14 +1,13 @@
 package com.example.orderservice.service.order;
 
 import com.example.orderservice.dto.event.PaymentStatus;
-import com.example.orderservice.dto.order.ItemAddedType;
+import com.example.orderservice.dto.order.Operation;
+import com.example.orderservice.dto.order.OperationType;
 import com.example.orderservice.dto.order.OrderCreateDto;
 import com.example.orderservice.dto.order.OrderResponseDto;
 import com.example.orderservice.dto.order.OrderUpdateDto;
-import com.example.orderservice.dto.orderItem.OrderItemCreateDto;
-import com.example.orderservice.dto.orderItem.OrderItemUpdateDto;
+import com.example.orderservice.dto.order.OrderUpdateNormalizer;
 import com.example.orderservice.exception.order.OrderNotFoundException;
-import com.example.orderservice.exception.orderItem.OrderItemNotFoundException;
 import com.example.orderservice.kafka.OrderEventPublisher;
 import com.example.orderservice.mapper.order.OrderMapper;
 import com.example.orderservice.mapper.orderItem.OrderItemMapper;
@@ -20,7 +19,6 @@ import com.example.orderservice.repository.item.ItemRepository;
 import com.example.orderservice.repository.order.OrderRepository;
 import com.example.orderservice.validators.order.OrderValidator;
 import lombok.RequiredArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,6 +73,7 @@ public class OrderServiceImpl implements OrderService {
             );
             oi.setItem(orderedItem);
         }
+        createOrder.setOrderTotal(totalPrice);
         createOrder.getOrderItems().addAll(orderItems);
 
         final Order saved = orderRepository.save(createOrder);
@@ -108,20 +107,57 @@ public class OrderServiceImpl implements OrderService {
 
         orderMapper.updateFromDto(orderUpdateDto, order);
 
+        final Map<Long, Operation> ops = OrderUpdateNormalizer.normalize(orderUpdateDto);
 
-        final ItemAddedType addedType = orderUpdateDto.getItemAddedType();
-        if (addedType != ItemAddedType.NOT_UPDATED) {
-            if (addedType == ItemAddedType.APPEND) {
-                appendOrderItems(order, orderUpdateDto.getOrderItemsToAdd());
-            } else if (addedType == ItemAddedType.REPLACE) {
-                replaceOrderItems(order, orderUpdateDto.getOrderItemsToAdd());
-            } else if (addedType == ItemAddedType.UPDATE) {
-                updateExistingOrderItems(order, orderUpdateDto.getOrderItemsToUpdate());
+        final List<OrderItem> items = order.getOrderItems();
+
+        final Map<Long, OrderItem> existing = items.stream()
+                .collect(Collectors.toMap(oi -> oi.getItem().getId(), oi -> oi));
+
+        for (final Map.Entry<Long, Operation> entry : ops.entrySet()) {
+            final Long itemId = entry.getKey();
+            final Operation op = entry.getValue();
+            final OperationType type = op.getType();
+            switch (type) {
+                case REMOVE -> {
+                    items.removeIf((final OrderItem oi) -> oi.getItem().getId().equals(itemId));
+                }
+                case UPDATE, ADD -> {
+                    handleModifying(existing, itemId, type, op, order, items);
+                }
             }
         }
-
+        final BigDecimal updatedTotal = calculateNewTotal(order.getOrderItems());
+        if(!updatedTotal.equals(order.getOrderTotal())) {
+            order.setOrderTotal(updatedTotal);
+        }
         orderRepository.saveAndFlush(order);
         return orderMapper.toResponseDto(order);
+    }
+
+    private void handleModifying(final Map<Long, OrderItem> existing,
+                                 final long itemId,
+                                 final OperationType operationType,
+                                 final Operation op,
+                                 final Order order,
+                                 final List<OrderItem> items) {
+        final OrderItem oi = existing.get(itemId);
+        if (oi != null) {
+            long updatedQuantity = op.getQuantity();
+            if(operationType == OperationType.ADD){
+                updatedQuantity += oi.getQuantity();
+            }
+            oi.setQuantity(updatedQuantity);
+        } else {
+            final Item item = itemRepository.getReferenceById(itemId);
+            final OrderItem newItem = OrderItem.builder()
+                    .order(order)
+                    .item(item)
+                    .quantity(op.getQuantity())
+                    .build();
+            items.add(newItem);
+            existing.put(itemId, newItem);
+        }
     }
 
 
@@ -139,6 +175,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public BigDecimal getOrderTotalById(final Long orderId) {
+        final Order order = orderValidator.checkOrderToExistence(orderId);
+        return order.getOrderTotal();
+    }
+
+    @Override
     @Transactional
     public void updateOrderStatus(final Long orderId, final PaymentStatus paymentStatus) {
         final Order order = orderValidator.checkOrderToExistence(orderId);
@@ -149,35 +191,26 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(order);
     }
 
-    private void appendOrderItems(final Order order, final List<OrderItemCreateDto> createDtos) {
-        final List<OrderItem> newItems = orderItemMapper.toEntityList(createDtos);
-        newItems.forEach(item -> {
-            final Item originalItem = itemRepository.getReferenceById(item.getItem().getId());
-            item.setOrder(order);
-            item.setItem(originalItem);
-            order.getOrderItems().add(item);
-        });
+    @Override
+    public List<OrderResponseDto> getAllOrdersByUserId(final Long userId) {
+        orderValidator.validateUserExistence(userId);
+        final List<Order> userOrders = orderRepository.findOrdersByUserId(userId);
+        return orderMapper.toResponseDtoList(userOrders);
     }
 
-    private void replaceOrderItems(final @NotNull Order order,
-                                   final List<OrderItemCreateDto> createDtos) {
-        order.getOrderItems().clear();
-
-        appendOrderItems(order, createDtos);
+    @Transactional(readOnly = true)
+    @Override
+    public boolean isOrderExistsById(final Long orderId) {
+        return orderRepository.existsById(orderId);
     }
 
-    private void updateExistingOrderItems(final @NotNull Order order,
-                                          final @NotNull List<OrderItemUpdateDto> updateDtos) {
-        final Map<Long, OrderItem> existingItemsMap = order.getOrderItems().stream()
-                .collect(Collectors.toMap(OrderItem::getId, Function.identity()));
-
-        for (final OrderItemUpdateDto dto : updateDtos) {
-            final OrderItem item = existingItemsMap.get(dto.getId());
-            if (item == null) {
-                throw new OrderItemNotFoundException(dto.getId());
-            }
-            orderItemMapper.updateFromDto(dto, item);
+    private BigDecimal calculateNewTotal(final List<OrderItem> items){
+        BigDecimal total = BigDecimal.ZERO;
+        for(final OrderItem oi : items){
+            final BigDecimal price = oi.getItem().getPrice();
+            final long quantity = oi.getQuantity();
+            total = total.add(price.multiply(BigDecimal.valueOf(quantity)));
         }
+        return total;
     }
-
 }

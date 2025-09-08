@@ -21,9 +21,9 @@ import java.util.List;
 public class OrderCreateDto {
 
     @Range(min = 0)
+    @NotNull
     private Long userId;
 
-    @NotNull
     private OrderStatus status;
 
     @Past

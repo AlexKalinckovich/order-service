@@ -28,6 +28,7 @@ public interface OrderMapper {
     @Mappings({
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "orderItems", ignore = true),
+            @Mapping(target = "orderTotal", ignore = true),
             @Mapping(target = "status", qualifiedByName = "mapOrderStatus"),
             @Mapping(target = "orderDate", qualifiedByName = "mapOrderDate")
     })
@@ -40,6 +41,7 @@ public interface OrderMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "orderItems", ignore = true)
+    @Mapping(target = "orderTotal", ignore = true)
     void updateFromDto(final OrderUpdateDto orderUpdateDto, @MappingTarget final Order order);
 
     List<OrderItemResponseDto> mapOrderItems(List<OrderItem> items);
