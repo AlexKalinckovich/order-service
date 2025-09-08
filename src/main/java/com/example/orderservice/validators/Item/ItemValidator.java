@@ -67,7 +67,7 @@ public class ItemValidator implements Validator<ItemCreateDto, ItemUpdateDto> {
         return items;
     }
 
-    public List<Long> checkItemsToExistByIds(final List<Long> itemIds){
+    public List<Long> checkItemsToExistByIds(final Set<Long> itemIds){
         if (itemIds == null || itemIds.isEmpty()) {
             return Collections.emptyList();
         }

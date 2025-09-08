@@ -1,11 +1,12 @@
-package com.example.orderservice.exception;
+package com.example.orderservice.exception.response;
 
 import java.time.Instant;
 
 public record ErrorResponse(
         Instant timestamp,
         int status,
-        String error,
+        String errorCode,
+        String message,
         String path,
         Object details
 ) {}

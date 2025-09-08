@@ -69,4 +69,10 @@ public class ItemServiceImpl implements ItemService {
         itemRepository.delete(item);
         return itemMapper.toResponseDto(item);
     }
+
+    @Override
+    public List<ItemResponseDto> getAllItems() {
+        final List<Item> items = itemRepository.findAll();
+        return itemMapper.toResponseDtoList(items);
+    }
 }

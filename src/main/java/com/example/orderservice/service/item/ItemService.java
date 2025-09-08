@@ -18,4 +18,5 @@ public interface ItemService {
 
     ItemResponseDto deleteItem(final Long orderId);
 
+    List<ItemResponseDto> getAllItems();
 }

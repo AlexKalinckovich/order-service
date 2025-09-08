@@ -5,6 +5,7 @@ import com.example.orderservice.dto.order.OrderCreateDto;
 import com.example.orderservice.dto.order.OrderResponseDto;
 import com.example.orderservice.dto.order.OrderUpdateDto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface OrderService {
@@ -19,5 +20,11 @@ public interface OrderService {
 
     OrderResponseDto deleteOrder(final Long orderId);
 
+    BigDecimal getOrderTotalById(final Long orderId);
+
     void updateOrderStatus(Long orderId, PaymentStatus paymentStatus);
+
+    List<OrderResponseDto> getAllOrdersByUserId(Long userId);
+
+    boolean isOrderExistsById(Long orderId);
 }

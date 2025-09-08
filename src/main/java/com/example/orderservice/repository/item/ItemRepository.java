@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface ItemRepository extends JpaRepository<Item, Long> {
@@ -16,7 +17,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> findExistingItems(@Param("ids") List<Long> ids);
 
     @Query("SELECT i.id from Item i where i.id in :ids")
-    List<Long> findExistingItemsIds(@Param("ids") List<Long> ids);
+    List<Long> findExistingItemsIds(@Param("ids") Set<Long> ids);
 
     boolean existsByName(String name);
 
